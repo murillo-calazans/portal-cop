@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal COP — v4</title>
+
+  <!-- ===== FONTS & ICONS ===== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+  <!-- ===== CSS (ETAPAS 2 a 6) ===== -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/dark-theme.css" />
+</head>
+<body>
+
+  <!-- ============================================================
+       HEADER PREMIUM
+  ============================================================ -->
+  <header class="app-header" id="appHeader">
+    <div class="header-left">
+      <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="logo-area">
+        <img src="assets/logo.svg" alt="COP" class="logo-img" />
+        <span class="logo-text">COP <span class="logo-version">v4</span></span>
+      </div>
+      <div class="header-search">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="globalSearch" placeholder="Pesquisar colaboradores..." />
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="header-status">
+        <span class="status-dot online"></span>
+        <span class="status-label">Sistema Online</span>
+      </div>
+      <div class="header-clock" id="headerClock">
+        <i class="far fa-clock"></i>
+        <span id="clockDisplay">--:--:--</span>
+      </div>
+      <div class="header-greeting" id="greetingDisplay">
+        <i class="far fa-user-circle"></i>
+        <span>Olá, <strong>Administrador</strong></span>
+      </div>
+      <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema">
+        <i class="fas fa-moon"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       LAYOUT PRINCIPAL
+  ============================================================ -->
+  <div class="app-layout">
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="app-sidebar" id="appSidebar">
+      <nav class="sidebar-nav">
+        <ul>
+          <li>
+            <button class="sidebar-item active" data-tab="dashboard">
+              <i class="fas fa-chart-pie"></i>
+              <span>Dashboard</span>
+            </button>
+          </li>
+          <li>
+            <button class="sidebar-item" data-tab="equipe">
+              <i class="fas fa-users"></i>
+              <span>Equipe</span>
+            </button>
+          </li>
+          <li>
+            <button class="sidebar-item" data-tab="plantoes">
+              <i class="fas fa-calendar-day"></i>
+              <span>Plantões</span>
+            </button>
+          </li>
+          <li>
+            <button class="sidebar-item" data-tab="ferias">
+              <i class="fas fa-umbrella-beach"></i>
+              <span>Férias</span>
+            </button>
+          </li>
+          <li>
+            <button class="sidebar-item" data-tab="aniversarios">
+              <i class="fas fa-birthday-cake"></i>
+              <span>Aniversários</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-mini">
+          <div class="avatar" style="background:#4f8cf7;">A</div>
+          <span>Admin</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== CONTEÚDO PRINCIPAL ===== -->
+    <main class="app-content">
+
+      <!-- ============================================================
+           DASHBOARD
+      ============================================================ -->
+      <section class="tab-panel active" id="panel-dashboard">
+     <div class="dashboard-grid" id="dashboardGrid">
+         <div class="dashboard-card" id="card-colaboradores"></div>
+         <div class="dashboard-card" id="card-plantoes-mes"></div>
+         <div class="dashboard-card" id="card-ferias"></div>
+         <div class="dashboard-card" id="card-aniversariantes"></div>
+         <div class="dashboard-card" id="card-proximo-fds"></div>
+         <div class="dashboard-card" id="card-avisos"></div>
+    </div>        
+        
+      </section>
+
+      <!-- ============================================================
+           EQUIPE
+      ============================================================ -->
+      <section class="tab-panel" id="panel-equipe">
+        <div class="team-toolbar">
+          <div class="team-filter">
+            <i class="fas fa-filter"></i>
+            <input type="text" id="teamFilter" placeholder="Filtrar por nome..." />
+          </div>
+          <span class="team-count" id="teamCount">0 colaboradores</span>
+        </div>
+        <div class="team-grid" id="teamGrid"></div>
+      </section>
+
+      <!-- ============================================================
+           PLANTÕES
+      ============================================================ -->
+      <section class="tab-panel" id="panel-plantoes">
+        <div class="plantao-month-nav">
+          <button id="plantPrev"><i class="fas fa-chevron-left"></i></button>
+          <h2 id="plantMonthTitle">Julho 2026</h2>
+          <button id="plantNext"><i class="fas fa-chevron-right"></i></button>
+          <button id="plantToday" class="btn-today">Hoje</button>
+        </div>
+        <div id="plantaoContainer"></div>
+      </section>
+
+      <!-- ============================================================
+           FÉRIAS
+      ============================================================ -->
+      <section class="tab-panel" id="panel-ferias">
+        <div class="ferias-header">
+          <h2><i class="fas fa-umbrella-beach"></i> Férias</h2>
+          <span class="ferias-stats" id="feriasStats">0 em andamento</span>
+        </div>
+
+        <div class="ferias-kpis" id="feriasKpis"></div>
+
+        <div class="ferias-section">
+          <h3 class="ferias-section-title"><i class="fas fa-umbrella-beach"></i> Em Férias</h3>
+          <div class="ferias-cards-grid" id="feriasEmAndamento"></div>
+        </div>
+
+        <div class="ferias-section">
+          <h3 class="ferias-section-title"><i class="fas fa-calendar-check"></i> Programadas</h3>
+          <div class="ferias-cards-grid" id="feriasProgramadas"></div>
+        </div>
+
+        <div class="ferias-section">
+          <h3 class="ferias-section-title"><i class="fas fa-hourglass-half"></i> Fila de Espera</h3>
+          <div class="ferias-cards-grid" id="feriasFilaEspera"></div>
+        </div>
+
+        <div class="ferias-section">
+          <h3 class="ferias-section-title"><i class="fas fa-rocket"></i> De Volta à Operação</h3>
+          <div class="ferias-cards-grid" id="feriasRetornaram"></div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           ANIVERSÁRIOS
+      ============================================================ -->
+      <section class="tab-panel" id="panel-aniversarios">
+        <div class="aniversarios-header">
+          <h2><i class="fas fa-birthday-cake"></i> Aniversariantes</h2>
+          <span class="aniversarios-stats" id="anivStats">Próximos 30 dias</span>
+        </div>
+        <div class="aniversarios-grid" id="aniversariosGrid"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ============================================================
+       SCRIPTS (ETAPA 7)
+  ============================================================ -->
+  <script src="js/theme.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/equipe.js"></script>
+  <script src="js/plantoes.js"></script>
+  <script src="js/ferias.js"></script>
+  <script src="js/aniversarios.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
