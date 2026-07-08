@@ -5,16 +5,17 @@
 
 (function() {
   const themeToggle = document.getElementById('themeToggle');
-  const icon = themeToggle.querySelector('i');
+  if (!themeToggle) return; // ← proteção
 
-  // Verifica preferência salva
+  const icon = themeToggle.querySelector('i');
+  if (!icon) return; // ← proteção extra
+
   const savedTheme = localStorage.getItem('theme');
   if (savedTheme === 'dark') {
     document.body.classList.add('dark-theme');
     icon.classList.replace('fa-moon', 'fa-sun');
   }
 
-  // Alterna tema
   themeToggle.addEventListener('click', function() {
     document.body.classList.toggle('dark-theme');
     const isDark = document.body.classList.contains('dark-theme');
