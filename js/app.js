@@ -75,10 +75,12 @@
 
   // ===== FUNÇÕES DE CACHE =====
   function salvarCache(data) {
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data }));
-    } catch (e) { /* ignore */ }
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data }));
+  } catch (e) {
+    console.warn('⚠️ Cache não disponível (localStorage desabilitado)');
   }
+}
 
   function carregarCache() {
     try {
@@ -180,6 +182,7 @@ async function buscarDadosRemotos() {
       }
 
       dados = novos;
+      window.dados = novos;   // <-- EXPÕE GLOBALMENTE
       salvarCache(novos);
       atualizarTudo();
     } catch (err) {
@@ -415,6 +418,8 @@ async function buscarDadosRemotos() {
     });
 
     carregarDados();
+    window.dados = dados;
+window.atualizarTudo = atualizarTudo;
 
     // Atualização periódica (5 min)
     setInterval(() => {
@@ -436,5 +441,10 @@ async function buscarDadosRemotos() {
   } else {
     init();
   }
+
+  // EXPOR GLOBALMENTE PARA NAVEGAÇÃO DOS PLANTÕES
+  window.dados = dados;
+  window.atualizarPlantao = atualizarPlantao;
+  window.atualizarTudo = atualizarTudo;
 
 })();
