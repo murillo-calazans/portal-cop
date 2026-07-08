@@ -604,6 +604,19 @@
   padding: 0;
   list-style: none;
 }
+/* E-mail na equipe */
+.team-email {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.team-email i {
+  color: var(--primary);
+  font-size: 0.7rem;
+}
 
 /* ============================================================
    RESPONSIVIDADE
