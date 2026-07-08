@@ -121,14 +121,26 @@ function atualizarPlantao(todosPlantoes) {
   // Navegação
   prevBtn.onclick = () => {
     currentMonth.setMonth(currentMonth.getMonth() - 1);
-    if (window.dados) atualizarPlantao(window.dados.plantoes);
+    if (window.dados && window.dados.plantoes) {
+      atualizarPlantao(window.dados.plantoes);
+    } else {
+      console.warn('Dados de plantões não disponíveis');
+    }
   };
   nextBtn.onclick = () => {
     currentMonth.setMonth(currentMonth.getMonth() + 1);
-    if (window.dados) atualizarPlantao(window.dados.plantoes);
+    if (window.dados && window.dados.plantoes) {
+      atualizarPlantao(window.dados.plantoes);
+    } else {
+      console.warn('Dados de plantões não disponíveis');
+    }
   };
   todayBtn.onclick = () => {
     currentMonth = new Date();
-    if (window.dados) atualizarPlantao(window.dados.plantoes);
+    if (window.dados && window.dados.plantoes) {
+      atualizarPlantao(window.dados.plantoes);
+    } else {
+      console.warn('Dados de plantões não disponíveis');
+    }
   };
 }
