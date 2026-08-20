@@ -107,16 +107,20 @@
 
  // ===== FUNÇÕES DE API =====
 async function buscarDadosRemotos() {
-    const [colaboradores, plantoes, ferias, aniversarios, feriados, avisos, mensagensRetorno] = await Promise.all([
-      buscarCSV(SHEET_URLS.colaboradores),
-      buscarCSV(SHEET_URLS.plantoes),
-      buscarCSV(SHEET_URLS.ferias),
-      buscarCSV(SHEET_URLS.aniversarios),
-      buscarCSV(SHEET_URLS.feriados),
-      buscarCSV(SHEET_URLS.avisos),
-      buscarCSV(SHEET_URLS.mensagensRetorno)
-    ]);
-    return { colaboradores, plantoes, ferias, aniversarios, feriados, avisos, mensagensRetorno };
+    const chaves = ['colaboradores', 'plantoes', 'ferias', 'aniversarios', 'feriados', 'avisos', 'mensagensRetorno'];
+    const resultados = await Promise.allSettled(chaves.map(chave => buscarCSV(SHEET_URLS[chave])));
+
+    const dados = {};
+    resultados.forEach((resultado, i) => {
+      const chave = chaves[i];
+      if (resultado.status === 'fulfilled') {
+        dados[chave] = resultado.value;
+      } else {
+        console.warn(`⚠️ Falha ao buscar aba "${chave}", seguindo sem ela:`, resultado.reason && resultado.reason.message);
+        dados[chave] = [];
+      }
+    });
+    return dados;
   }
 
   // ===== FUNÇÃO PARA DADOS MOCK (fallback) =====
