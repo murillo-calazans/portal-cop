@@ -13,6 +13,7 @@
     plantoes: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQBhKN6Ez2TVTXmKuTXrATXr0jwNGIFfB-YLliQfZkbuIOoYremINoFpl30DPymLLND9SNJIULkyIa4/pub?gid=1014264179&single=true&output=csv',
     ferias: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQBhKN6Ez2TVTXmKuTXrATXr0jwNGIFfB-YLliQfZkbuIOoYremINoFpl30DPymLLND9SNJIULkyIa4/pub?gid=2128176886&single=true&output=csv',
     aniversarios: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQBhKN6Ez2TVTXmKuTXrATXr0jwNGIFfB-YLliQfZkbuIOoYremINoFpl30DPymLLND9SNJIULkyIa4/pub?gid=1345651469&single=true&output=csv',
+    feriados: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQBhKN6Ez2TVTXmKuTXrATXr0jwNGIFfB-YLliQfZkbuIOoYremINoFpl30DPymLLND9SNJIULkyIa4/pub?gid=1741959996&single=true&output=csv',
     avisos: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQBhKN6Ez2TVTXmKuTXrATXr0jwNGIFfB-YLliQfZkbuIOoYremINoFpl30DPymLLND9SNJIULkyIa4/pub?gid=1824308061&single=true&output=csv',
    mensagensRetorno: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQBhKN6Ez2TVTXmKuTXrATXr0jwNGIFfB-YLliQfZkbuIOoYremINoFpl30DPymLLND9SNJIULkyIa4/pub?gid=1695158649&single=true&output=csv'
 
@@ -106,15 +107,16 @@
 
  // ===== FUNÇÕES DE API =====
 async function buscarDadosRemotos() {
-    const [colaboradores, plantoes, ferias, aniversarios, avisos, mensagensRetorno] = await Promise.all([
+    const [colaboradores, plantoes, ferias, aniversarios, feriados, avisos, mensagensRetorno] = await Promise.all([
       buscarCSV(SHEET_URLS.colaboradores),
       buscarCSV(SHEET_URLS.plantoes),
       buscarCSV(SHEET_URLS.ferias),
       buscarCSV(SHEET_URLS.aniversarios),
+      buscarCSV(SHEET_URLS.feriados),
       buscarCSV(SHEET_URLS.avisos),
       buscarCSV(SHEET_URLS.mensagensRetorno)
     ]);
-    return { colaboradores, plantoes, ferias, aniversarios, avisos, mensagensRetorno };
+    return { colaboradores, plantoes, ferias, aniversarios, feriados, avisos, mensagensRetorno };
   }
 
   // ===== FUNÇÃO PARA DADOS MOCK (fallback) =====
@@ -141,6 +143,10 @@ async function buscarDadosRemotos() {
       aniversarios: [
         { Nome: 'Ana Silva', Data: 44562 },
         { Nome: 'Carlos Souza', Data: 44890 }
+      ],
+      feriados: [
+        { Data: '07/09/2026', Tipo: 'Independência do Brasil', Colaborador: '', Horário: '' },
+        { Data: '25/12/2025', Tipo: 'Natal', Colaborador: 'Ana Silva', Horário: '08:00-17:00' }
       ]
     };
   }
@@ -219,6 +225,7 @@ async function buscarDadosRemotos() {
     const plantoes = dados.plantoes || dados.Plantoes || [];
     const ferias = dados.ferias || dados.Ferias || [];
     const aniversarios = dados.aniversarios || dados.Aniversarios || [];
+    const feriados = dados.feriados || dados.Feriados || [];
     const avisos = dados.avisos || dados.Avisos || [];
     const mensagensRetorno = dados.mensagensRetorno || dados.MensagensRetorno || [];
 
@@ -226,12 +233,13 @@ async function buscarDadosRemotos() {
       colaboradores: colaboradores.length,
       plantoes: plantoes.length,
       ferias: ferias.length,
-      aniversarios: aniversarios.length
+      aniversarios: aniversarios.length,
+      feriados: feriados.length
     });
 
     // Dashboard
     if (typeof atualizarDashboard === 'function') {
-      atualizarDashboard({ colaboradores, plantoes, ferias, aniversarios, avisos });
+      atualizarDashboard({ colaboradores, plantoes, ferias, aniversarios, feriados, avisos });
     } else {
       console.warn('⚠️ Função atualizarDashboard não encontrada');
     }
@@ -245,7 +253,7 @@ async function buscarDadosRemotos() {
 
     // Plantões
     if (typeof atualizarPlantao === 'function') {
-      atualizarPlantao(plantoes);
+      atualizarPlantao(plantoes, feriados);
     } else {
       console.warn('⚠️ Função atualizarPlantao não encontrada');
     }
@@ -410,7 +418,7 @@ async function buscarDadosRemotos() {
     initGlobalSearch();
 
     // Verifica se os cards do dashboard têm os IDs corretos
-    const ids = ['card-colaboradores', 'card-plantoes-mes', 'card-ferias', 'card-aniversariantes', 'card-proximo-fds', 'card-avisos'];
+    const ids = ['card-colaboradores', 'card-plantoes-mes', 'card-ferias', 'card-aniversariantes', 'card-proximo-fds', 'card-proximo-feriado', 'card-avisos'];
     ids.forEach(id => {
       if (!document.getElementById(id)) {
         console.warn(`⚠️ ID "${id}" não encontrado no DOM. Verifique o index.html`);
