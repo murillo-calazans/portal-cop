@@ -190,10 +190,13 @@ function atualizarDashboard(dados) {
   }
 
   // ---- Card 5.5: Próximo Feriado ----
-  const proximoFeriado = feriados
+  const feriadosFuturos = feriados
     .map(f => ({ data: excelDateToJSDate(f.Data), nome: f.Tipo || f.Nome || f.Feriado || 'Feriado', colaborador: f.Colaborador, horario: f.Horário }))
     .filter(f => f.data && f.data >= hoje)
-    .sort((a, b) => a.data - b.data)[0];
+    .sort((a, b) => a.data - b.data);
+
+  const proximaData = feriadosFuturos[0] ? feriadosFuturos[0].data.toDateString() : null;
+  const proximoFeriado = feriadosFuturos.filter(f => f.data.toDateString() === proximaData);
 
   const cardFeriado = document.getElementById('card-proximo-feriado');
   if (cardFeriado) {
@@ -203,11 +206,14 @@ function atualizarDashboard(dados) {
         <span class="card-icon"><i class="fas fa-star"></i></span>
       </div>
     `;
-    if (proximoFeriado) {
+    if (proximoFeriado.length > 0) {
+      const escalados = proximoFeriado.filter(f => f.colaborador);
       html += `<div style="font-size:0.9rem; margin-top:4px;">
-        <strong>${proximoFeriado.nome}</strong><br>
-        ${formatarDataCurta(proximoFeriado.data)}<br>
-        ${proximoFeriado.colaborador ? `${proximoFeriado.colaborador} - ${proximoFeriado.horario || '08:00-17:00'}` : '<span class="card-sub">Plantonista a definir</span>'}
+        <strong>${proximoFeriado[0].nome}</strong><br>
+        ${formatarDataCurta(proximoFeriado[0].data)}<br>
+        ${escalados.length > 0
+          ? escalados.map(f => `${f.colaborador} - ${f.horario || '08:00-17:00'}`).join('<br>')
+          : '<span class="card-sub">Plantonista a definir</span>'}
       </div>`;
     } else {
       html += `<div class="card-sub">Nenhum feriado cadastrado</div>`;
