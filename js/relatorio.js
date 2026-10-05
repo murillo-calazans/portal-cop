@@ -73,6 +73,26 @@ function montarCorpoRelatorio(mesRef, dados) {
 
   const totalEscalados = new Set(escalados.map(e => e.nome)).size;
 
+  // Férias que cruzam o mês
+  const feriasMes = (dados.ferias || [])
+    .map(f => ({ nome: f.Nome, inicio: excelDateToJSDate(f.Início), fim: excelDateToJSDate(f.Fim) }))
+    .filter(f => f.inicio && f.fim && f.inicio <= ultimoDia && f.fim >= primeiroDia)
+    .sort((a, b) => a.inicio - b.inicio);
+  const linhasFerias = feriasMes.map((f, i) => `<tr style="background:${i % 2 ? '#f5f7fb' : '#fff'};">
+      <td style="${td}"><b>${escaparHTML(f.nome)}</b></td>
+      <td style="${td}">${formatarDataCurta(f.inicio)} a ${formatarDataCurta(f.fim)}</td>
+    </tr>`).join('');
+
+  // A aba férias usa o nome completo ("MARIA ISABELLY ...") e a de colaboradores o curto ("Maria Isabelly"):
+  // casa quando todas as palavras do nome curto aparecem no nome completo
+  const palavras = n => String(n || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().split(/\s+/).filter(Boolean);
+  const feriasDe = nome => {
+    const curto = palavras(nome);
+    return feriasMes.find(f => { const completo = palavras(f.nome); return curto.length && curto.every(w => completo.includes(w)); });
+  };
+  const diaMes = d => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  const temCargo = (dados.colaboradores || []).some(c => c.Cargo && c.Cargo.trim());
+
   // Horário de segunda a sexta (aba colaboradores: "Seg. a Qui.|07:00 às 17:00|  Sexta |07:00 às 16:00|")
   const linhasHorarios = (dados.colaboradores || [])
     .filter(c => c.Nome)
@@ -84,9 +104,16 @@ function montarCorpoRelatorio(mesRef, dados) {
           ? `<span style="color:#555;">${escaparHTML(partes[k])}</span> <b>${escaparHTML(partes[k + 1])}</b>`
           : escaparHTML(partes[k]));
       }
-      return `<tr style="background:${i % 2 ? '#f5f7fb' : '#fff'};">
+      const ferias = feriasDe(c.Nome);
+      const fundo = ferias ? '#e8f4ff' : (i % 2 ? '#f5f7fb' : '#fff');
+      const situacao = ferias
+        ? `<b style="color:#0b63b6;">Férias ${diaMes(ferias.inicio)} a ${diaMes(ferias.fim)}</b>`
+        : '<span style="color:#2e7d32;">Ativo</span>';
+      return `<tr style="background:${fundo};">
       <td style="${td}"><b>${escaparHTML(c.Nome)}</b></td>
+      ${temCargo ? `<td style="${td}">${escaparHTML(c.Cargo || '')}</td>` : ''}
       <td style="${td}">${faixas.join('<br>') || '<span style="color:#777;">Não informado</span>'}</td>
+      <td style="${td}white-space:nowrap;">${situacao}</td>
     </tr>`;
     }).join('');
 
@@ -110,16 +137,6 @@ function montarCorpoRelatorio(mesRef, dados) {
     .map((a, i) => `<tr style="background:${i % 2 ? '#f5f7fb' : '#fff'};"><td style="${td}">${escaparHTML(a.texto)}</td></tr>`)
     .join('');
 
-  // Férias que cruzam o mês
-  const linhasFerias = (dados.ferias || [])
-    .map(f => ({ nome: f.Nome, inicio: excelDateToJSDate(f.Início), fim: excelDateToJSDate(f.Fim) }))
-    .filter(f => f.inicio && f.fim && f.inicio <= ultimoDia && f.fim >= primeiroDia)
-    .sort((a, b) => a.inicio - b.inicio)
-    .map((f, i) => `<tr style="background:${i % 2 ? '#f5f7fb' : '#fff'};">
-      <td style="${td}"><b>${escaparHTML(f.nome)}</b></td>
-      <td style="${td}">${formatarDataCurta(f.inicio)} a ${formatarDataCurta(f.fim)}</td>
-    </tr>`).join('');
-
   const totalFeriados = feriadoPorDia.size;
   const semEscala = listaDias.filter(d => d.pessoas.length === 0).length;
   const geradoEm = new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
@@ -135,8 +152,8 @@ function montarCorpoRelatorio(mesRef, dados) {
 
   <h2 style="${h2}">Horários de segunda a sexta</h2>
   <table style="border-collapse:collapse;width:100%;" cellpadding="0" cellspacing="0">
-    <tr><th style="${th}">Colaborador</th><th style="${th}">Horário</th></tr>
-    ${linhasHorarios || `<tr><td style="${td}" colspan="2">Nenhum colaborador cadastrado</td></tr>`}
+    <tr><th style="${th}">Colaborador</th>${temCargo ? `<th style="${th}">Cargo</th>` : ''}<th style="${th}">Horário</th><th style="${th}">No mês</th></tr>
+    ${linhasHorarios || `<tr><td style="${td}" colspan="4">Nenhum colaborador cadastrado</td></tr>`}
   </table>
 
   <h2 style="${h2}">Plantões — fins de semana e feriados</h2>
