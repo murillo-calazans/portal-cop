@@ -223,6 +223,7 @@ async function buscarDadosRemotos() {
       console.warn('⚠️ Nenhum dado disponível para atualizar');
       return;
     }
+    window.dados = dados; // usado pela navegação dos plantões e pelo relatório
 
     // Normaliza os dados (aceita maiúsculas/minúsculas)
     const colaboradores = dados.colaboradores || dados.Colaboradores || [];

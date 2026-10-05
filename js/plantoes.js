@@ -11,11 +11,17 @@ function criarBlocoDia(label, data, plantoesDoDia, feriadoNome) {
   const block = document.createElement('div');
   block.className = 'plantao-day-block';
   const badge = feriadoNome ? ` <span class="holiday-badge"><i class="fas fa-star"></i> ${feriadoNome}</span>` : '';
+  // Dia de outro mês (fim de semana que vira o mês): a escala dele está no mês vizinho
+  const refMes = currentMonth.getFullYear() * 12 + currentMonth.getMonth();
+  const diaMes = data.getFullYear() * 12 + data.getMonth();
+  const semPlantao = diaMes > refMes ? '<li class="no-data">Verifique o próximo mês</li>'
+    : diaMes < refMes ? '<li class="no-data">Verifique o mês anterior</li>'
+    : '<li class="no-data">Sem plantão</li>';
   block.innerHTML = `
     <h4><i class="fas fa-calendar-day"></i> ${label}${badge}</h4>
     <div class="day-date">${formatarDataCurta(data)}</div>
     <ul>
-      ${plantoesDoDia.length === 0 ? '<li class="no-data">Sem plantão</li>' :
+      ${plantoesDoDia.length === 0 ? semPlantao :
         plantoesDoDia.map(p => `<li><span class="colab-name">${p.Colaborador}</span> <span class="colab-time">${p.Horário || '08:00 às 17:00'}</span></li>`).join('')}
     </ul>
   `;
@@ -173,6 +179,8 @@ function atualizarPlantao(todosPlantoes, todosFeriados) {
       console.warn('Dados de plantões não disponíveis');
     }
   };
+  const relBtn = document.getElementById('plantRelatorio');
+  if (relBtn) relBtn.onclick = () => gerarRelatorioEscala(new Date(currentMonth));
   todayBtn.onclick = () => {
     currentMonth = new Date();
     if (window.dados && window.dados.plantoes) {
