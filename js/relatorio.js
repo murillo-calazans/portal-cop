@@ -71,19 +71,44 @@ function montarCorpoRelatorio(mesRef, dados) {
     </tr>`;
   });
 
-  // Resumo por colaborador
-  const porPessoa = new Map();
-  escalados.forEach(e => {
-    if (!porPessoa.has(e.nome)) porPessoa.set(e.nome, []);
-    porPessoa.get(e.nome).push(e.data);
+  const totalEscalados = new Set(escalados.map(e => e.nome)).size;
+
+  // Horário de segunda a sexta (aba colaboradores: "Seg. a Qui.|07:00 às 17:00|  Sexta |07:00 às 16:00|")
+  const linhasHorarios = (dados.colaboradores || [])
+    .filter(c => c.Nome)
+    .map((c, i) => {
+      const partes = String(c.Horário || '').split('|').map(s => s.trim()).filter(Boolean);
+      const faixas = [];
+      for (let k = 0; k < partes.length; k += 2) {
+        faixas.push(partes[k + 1]
+          ? `<span style="color:#555;">${escaparHTML(partes[k])}</span> <b>${escaparHTML(partes[k + 1])}</b>`
+          : escaparHTML(partes[k]));
+      }
+      return `<tr style="background:${i % 2 ? '#f5f7fb' : '#fff'};">
+      <td style="${td}"><b>${escaparHTML(c.Nome)}</b></td>
+      <td style="${td}">${faixas.join('<br>') || '<span style="color:#777;">Não informado</span>'}</td>
+    </tr>`;
+    }).join('');
+
+  // Avisos do mês: os que citam uma data do mês (dd/mm ou dd/mm/aaaa, mesmo inativos — servem de registro
+  // de folgas/consultas) + os ativos sem data. Ordenados pela primeira data citada.
+  const avisosMes = [];
+  (dados.avisos || []).forEach(a => {
+    const texto = (a.Texto || '').trim();
+    if (!texto) return;
+    const datas = [...texto.matchAll(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?\b/g)]
+      .map(m => new Date(m[3] ? Number(m[3]) : year, Number(m[2]) - 1, Number(m[1])));
+    const ativo = ['SIM', 'TRUE', '1'].includes((a.Ativo || '').toString().trim().toUpperCase());
+    const doMes = datas.filter(noMes);
+    if (doMes.length) avisosMes.push({ texto, ordem: Math.min(...doMes) });
+    else if (!datas.length && ativo) avisosMes.push({ texto, ordem: Infinity });
   });
-  const linhasResumo = [...porPessoa.entries()]
-    .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'pt-BR'))
-    .map(([nome, datas], i) => `<tr style="background:${i % 2 ? '#f5f7fb' : '#fff'};">
-      <td style="${td}"><b>${escaparHTML(nome)}</b></td>
-      <td style="${td}text-align:center;">${datas.length}</td>
-      <td style="${td}">${datas.sort((a, b) => a - b).map(d => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })).join(', ')}</td>
-    </tr>`).join('');
+  const vistos = new Set();
+  const linhasAvisos = avisosMes
+    .filter(a => !vistos.has(a.texto) && vistos.add(a.texto))
+    .sort((a, b) => a.ordem - b.ordem)
+    .map((a, i) => `<tr style="background:${i % 2 ? '#f5f7fb' : '#fff'};"><td style="${td}">${escaparHTML(a.texto)}</td></tr>`)
+    .join('');
 
   // Férias que cruzam o mês
   const linhasFerias = (dados.ferias || [])
@@ -101,24 +126,29 @@ function montarCorpoRelatorio(mesRef, dados) {
 
   const corpo = `
 <div style="font-family:Segoe UI,Arial,sans-serif;color:#1f2733;max-width:760px;">
-  <h1 style="font-size:22px;color:#1e3a6e;margin:0 0 4px;">Escala de Plantões — ${tituloMes}</h1>
+  <h1 style="font-size:22px;color:#1e3a6e;margin:0 0 4px;">Escala COP — ${tituloMes}</h1>
   <p style="font-size:13px;color:#555;margin:0 0 14px;">COP — Controle de Operações · gerado em ${geradoEm}</p>
   <p style="font-size:13px;margin:0 0 6px;">
-    <b>${listaDias.length}</b> dias com plantão/feriado · <b>${porPessoa.size}</b> colaboradores escalados ·
+    <b>${listaDias.length}</b> dias com plantão/feriado · <b>${totalEscalados}</b> colaboradores escalados ·
     <b>${totalFeriados}</b> feriado(s)${semEscala ? ` · <b style="color:#b00020;">${semEscala} dia(s) a definir</b>` : ''}
   </p>
 
-  <h2 style="${h2}">Escala do mês</h2>
+  <h2 style="${h2}">Horários de segunda a sexta</h2>
+  <table style="border-collapse:collapse;width:100%;" cellpadding="0" cellspacing="0">
+    <tr><th style="${th}">Colaborador</th><th style="${th}">Horário</th></tr>
+    ${linhasHorarios || `<tr><td style="${td}" colspan="2">Nenhum colaborador cadastrado</td></tr>`}
+  </table>
+
+  <h2 style="${h2}">Plantões — fins de semana e feriados</h2>
   <table style="border-collapse:collapse;width:100%;" cellpadding="0" cellspacing="0">
     <tr><th style="${th}">Data</th><th style="${th}">Dia</th><th style="${th}">Ocasião</th><th style="${th}">Plantonista(s) — horário</th></tr>
     ${linhasEscala || `<tr><td style="${td}" colspan="4">Nenhum plantão neste mês</td></tr>`}
   </table>
 
-  ${linhasResumo ? `<h2 style="${h2}">Resumo por colaborador</h2>
+  <h2 style="${h2}">Avisos do mês</h2>
   <table style="border-collapse:collapse;width:100%;" cellpadding="0" cellspacing="0">
-    <tr><th style="${th}">Colaborador</th><th style="${th}text-align:center;">Plantões</th><th style="${th}">Dias</th></tr>
-    ${linhasResumo}
-  </table>` : ''}
+    ${linhasAvisos || `<tr><td style="${td}">Nenhum aviso neste mês</td></tr>`}
+  </table>
 
   <h2 style="${h2}">Férias no mês</h2>
   <table style="border-collapse:collapse;width:100%;" cellpadding="0" cellspacing="0">
@@ -140,8 +170,8 @@ function gerarRelatorioEscala(mesRef) {
   }
 
   const { corpo, tituloMes } = montarCorpoRelatorio(mesRef, dados);
-  const titulo = `Escala de Plantões — ${tituloMes}`;
-  const arquivo = `escala-plantoes-${mesRef.getFullYear()}-${String(mesRef.getMonth() + 1).padStart(2, '0')}.html`;
+  const titulo = `Escala COP — ${tituloMes}`;
+  const arquivo = `escala-cop-${mesRef.getFullYear()}-${String(mesRef.getMonth() + 1).padStart(2, '0')}.html`;
   const docBase = (extra) => `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${titulo}</title>
 <style>body{margin:0;padding:24px 16px;background:#fff;}@media print{.barra{display:none!important;}body{padding:0;}@page{margin:14mm;}}</style>
